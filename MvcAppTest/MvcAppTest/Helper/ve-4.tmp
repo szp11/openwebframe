@@ -1,0 +1,338 @@
+﻿using System;
+using System.Data;
+using System.Configuration;
+using System.Linq;
+using System.Web;
+using System.Web.Security;
+using System.Web.UI;
+using System.Web.UI.HtmlControls;
+using System.Web.UI.WebControls;
+using System.Web.UI.WebControls.WebParts;
+using System.Xml.Linq;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace MvcAppTest.Helper
+{
+    /// <summary>
+    /// 放入容器的对象必须实现的接口，把条件查找等逻辑从容器中剥离出来
+    /// </summary>
+    public interface IObjectAdapter_WuQi
+     {
+        /// <summary>
+        /// 条件查找，相当于select里的where。
+        /// </summary>
+        /// <param name="adapter">0：默认，能从容器中得到所有的对象。其他数值自定义</param>
+        /// <returns>符合查找条件返回true</returns>
+      bool IsMe(int adapter);
+     }
+    /// <summary>
+    /// 自定义队列类
+    /// </summary>
+    internal class CQueue:IEnumerable
+    {
+        private DictionaryEntry[] obj_list=null;
+        private int n_count = 0;
+        private int n_length = 0;
+        public CQueue(int len)
+        {
+            this.n_count = len;
+            this.n_length = 0;
+            obj_list = new DictionaryEntry[n_count];
+        }
+        /// <summary>
+        /// 用迭代器遍历
+        /// </summary>
+        /// <returns></returns>
+        public System.Collections.IEnumerator GetEnumerator()
+        {
+            for(int i=0; i< n_length;i++)
+            {
+                yield return obj_list[i];
+            }
+        }
+        /// <summary>
+        /// 压入对象
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="key"></param>
+        public void Push(object value, object key)
+        {
+            DictionaryEntry ed = new DictionaryEntry(key, value);
+            if (n_length < n_count)
+            {
+                obj_list[n_length] = ed;
+                this.n_length++;
+            }
+            else
+            {
+                //将数组的值顺序前移一位
+                for (int i = 0; i < n_count - 1; i++)
+                {
+                    obj_list[i] = obj_list[i + 1];
+                }
+                obj_list[n_count - 1] = ed;
+            }
+            return;
+
+        }
+        /// <summary>
+        /// 根据键值查找对象
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public object Contains(object key)
+        {
+            object result = null;
+            foreach ( DictionaryEntry de in obj_list)
+            {
+                if(de.Key.Equals(key))
+                {
+                    result = de.Value;
+                    break;
+                }
+            }
+            return result;
+        }
+
+        public int Count { get{return this.n_length;} }
+
+    }
+    /// <summary>
+    /// 对象容器，与一般容器不同的是提供线程安全的条件查询（类似select语句中的where）。定时清除
+    /// 不活动的对象到垃圾堆中。用于缓存对象
+    /// </summary>
+    /// <typeparam name="T">泛型对象</typeparam>
+    public class ObjectContainer_WuQi<T> where T : IObjectAdapter_WuQi
+    {
+        //对象代理,加入了丢弃策略
+        internal struct OBJPROXY 
+        {
+            public  T obj_t;//值
+            public object obj_k;//键
+            public  bool b_live;
+            public OBJPROXY(T t,object k,bool blive)
+            {
+                this.obj_t = t;
+                this.obj_k = k;
+                this.b_live = blive;
+            }
+        }
+        private Hashtable obj_hash_front =null;//活动堆
+        private Hashtable obj_hash_back = null;//垃圾堆
+        private int i_clear_time = 0;//发起线程函数的时间，一般设置在晚上
+        private System.Timers.Timer obj_ticker = null;
+        private System.Threading.ReaderWriterLock obj_rwl = null;
+        private int i_thread_num = 0;//一个周期内线程函数执行的次数
+
+        
+        /// <summary>
+        /// 默认改造函数
+        /// </summary>
+        public ObjectContainer_WuQi()
+        {
+            this.i_clear_time = 0;
+
+            this.obj_hash_front = new Hashtable();
+            this.obj_hash_back = new Hashtable();
+            
+            obj_hash_front.Clear();
+            obj_hash_back.Clear();
+            obj_rwl = new System.Threading.ReaderWriterLock();
+            obj_ticker = new System.Timers.Timer(60000);
+            obj_ticker.Elapsed += new System.Timers.ElapsedEventHandler(TimerMethod);
+            obj_ticker.AutoReset = true;          
+
+            obj_ticker.Start();
+
+        }
+        /// <summary>
+        /// 构造函数
+        /// </summary>
+        /// <param name="interval">启动检查非活动对象的时间，0-23点</param>
+        public ObjectContainer_WuQi(int interval)
+        {
+            this.i_clear_time = interval;
+
+            this.obj_hash_front = new Hashtable();
+            this.obj_hash_back = new Hashtable();
+
+            obj_hash_front.Clear();
+            obj_hash_back.Clear();
+            obj_rwl = new System.Threading.ReaderWriterLock();
+            obj_ticker = new System.Timers.Timer(60000);
+            obj_ticker.Elapsed += new System.Timers.ElapsedEventHandler(TimerMethod);
+            obj_ticker.AutoReset = true;
+
+            obj_ticker.Start();
+        }
+        /// <summary>
+        /// 线程回调函数
+        /// </summary>
+        /// <param name="state"></param>
+        private void TimerMethod(object state,System.Timers.ElapsedEventArgs timereven)
+        {
+            //如果不在测试的时间段内，直接返回
+            if (this.i_clear_time != DateTime.Now.Hour)
+            {
+                this.i_thread_num = 0;
+                return;
+            }
+            else
+            {
+                //在检测时间段内，检测也只能执行一次
+                if (0 == this.i_thread_num)
+                    this.i_thread_num = 1;
+                else
+                    return;
+
+            }
+
+            try
+            {
+                obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
+                //遍历活动堆中的对象，找出该时间段内没有被访问的，放入垃圾堆中
+                foreach (DictionaryEntry de in obj_hash_front)
+                {
+                    OBJPROXY proxy = (OBJPROXY)de.Value;
+                    if (false != proxy.b_live)
+                    {
+                        proxy.b_live = false;
+                    }
+                    else
+                    {
+                        obj_hash_front.Remove(proxy.obj_k);
+                        obj_hash_back.Add(proxy.obj_k, (object)proxy);
+                    }
+                }
+
+            }
+            catch (System.Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                obj_rwl.ReleaseWriterLock();
+            }
+            return;
+        }
+
+        protected virtual bool InsertDB()
+        {
+
+        }
+        /// <summary>
+        /// 插入一个对象到容器中
+        /// </summary>
+        /// <param name="t">对象的值</param>
+        /// <param name="k">对象的键，用于检索对象</param>
+        public void Insert(T t, object k)
+        {
+            try
+            {
+                obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
+                OBJPROXY obj_proxy = new OBJPROXY(t,k,true);
+                obj_hash_front.Add(obj_proxy.obj_k, (object)obj_proxy);
+
+            }
+            catch (System.Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                obj_rwl.ReleaseWriterLock();
+            }
+        }
+        /// <summary>
+        /// 查找符合条件的对象，并将它们存入一个list中
+        /// </summary>
+        /// <param name="adapter">查找条件</param>
+        /// <returns>如果返回的list的长度为0，表示没有找到符合条件的对象</returns>
+        public ArrayList Search(int adapter)
+        {
+            ArrayList al = new ArrayList();
+            al.Clear();
+            try
+            {
+                obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
+                //首先在活动的对象集合中寻找
+                foreach (DictionaryEntry defront in obj_hash_front)
+                {
+                    OBJPROXY proxy = (OBJPROXY)defront.Value;
+                    T t = (T)proxy.obj_t;
+                    if (false != t.IsMe(adapter))
+                        al.Add(t);
+                }
+                //然后在垃圾堆中寻找，如果找到了同时将其加入活动堆中
+                foreach (DictionaryEntry deback in obj_hash_back)
+                {
+                    OBJPROXY proxy = (OBJPROXY)deback.Value;
+                    T t = (T)proxy.obj_t;
+                    if (false != t.IsMe(adapter))
+                    {
+                        al.Add(t);
+                        proxy.b_live = true;
+                        obj_hash_back.Remove(proxy.obj_k);                        
+                        obj_hash_front.Add(proxy.obj_k,(object)proxy);
+                    }
+                }
+
+            }
+            catch (System.Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                obj_rwl.ReleaseWriterLock();
+            }
+            return al;
+        }
+        /// <summary>
+        /// 查找单个对象
+        /// </summary>
+        /// <param name="k">对象的键，用于检索对象</param>
+        /// <returns>为null时表示未找到对象</returns>
+        public object SelectSingleObject(object k)
+        {
+            object result =null;
+            try
+            {
+                obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
+                //先在活动堆中查找，如果找不到，就到垃圾堆中找。
+                if (obj_hash_front.ContainsKey(k))
+                {
+                    OBJPROXY proxy = (OBJPROXY)obj_hash_front[k];
+                    proxy.b_live = true;
+                    result = proxy.obj_t;
+                }
+                else
+                {
+                    if (obj_hash_back.ContainsKey(k))
+                    {
+                        OBJPROXY proxy = (OBJPROXY)obj_hash_back[k];
+                        proxy.b_live = true;
+                        obj_hash_back.Remove(proxy.obj_k);
+                        obj_hash_front.Add(proxy.obj_k, (object)proxy);
+                        result = proxy.obj_t;
+                    }
+
+                }
+
+            }
+            catch (System.Exception e)
+            {
+                throw e;            	
+            }
+            finally
+            {
+                obj_rwl.ReleaseWriterLock();
+            }            
+            return result;
+        }
+
+
+    }
+}
