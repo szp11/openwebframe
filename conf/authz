@@ -21,6 +21,11 @@
 [groups]
 # harry_and_sally = harry,sally
 # harry_sally_and_joe = harry,sally,&joe
+g_manager = wht3204661
+
+[openwebframe:/]
+@g_manager = rw
+* = r
 
 # [/foo/bar]
 # harry = rw
