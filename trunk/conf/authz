@@ -23,7 +23,7 @@
 # harry_sally_and_joe = harry,sally,&joe
 g_manager = wht3204661
 
-[openwebframe:/]
+[/]
 @g_manager = rw
 #* = r
 
