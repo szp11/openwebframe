@@ -14,7 +14,8 @@ namespace MvcAppTest.Helper.Cache
         /// 更新容器策略
         /// </summary>
         /// <param name="container">缓存区</param>
-        /// <param name="maximum">缓存上限</param>
-        void UpdateCache(ref ICacheStorage_WuQi container);
+       bool Insert(object k, CCacheItem_WuQi item, ref ICacheStorage_WuQi container);
+       bool Delete(object k, ref ICacheStorage_WuQi container);
+       void Clear(ref ICacheStorage_WuQi container);
     }
 }

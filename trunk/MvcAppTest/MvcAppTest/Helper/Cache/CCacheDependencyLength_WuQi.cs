@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Web;
@@ -17,17 +18,46 @@ namespace MvcAppTest.Helper.Cache
     /// </summary>
     public class CCacheDependencyLength_WuQi : ICacheDependency_WuQi
     {
-        public void UpdateCache(ref ICacheStorage_WuQi container)
-        { }
-
         private int i_objectcountmax = 1000;//容器内缓存对象的上限
-        private bool b_containeroverflow = false;//容器是否已经溢出
-        private double d_objectcuttime = 0.5;//容器上溢时，将减少容器内对象数量的倍率
-        public CCacheDependencyLength_WuQi(int num,double cuttime)
+        private Queue<CCacheItem_WuQi> o_objectqueue;
+        public CCacheDependencyLength_WuQi(int capacity)
         {
-            this.i_objectcountmax = num;
-            this.d_objectcuttime = cuttime;
+            this.i_objectcountmax = capacity;
+            this.o_objectqueue = new Queue<CCacheItem_WuQi>(this.i_objectcountmax);
         }
 
+        public int ContainerCapacity
+        {
+            get { return this.i_objectcountmax; }
+            set { this.i_objectcountmax = value; }
+        }
+         public bool Insert(object k, CCacheItem_WuQi item, ref ICacheStorage_WuQi container)
+         {
+             if(this.o_objectqueue.Count < this.i_objectcountmax)
+             {
+                 container.Add(k, item);
+                 this.o_objectqueue.Enqueue(item);
+                 return true;
+             }
+             else
+             {
+                 CCacheItem_WuQi ci = this.o_objectqueue.Dequeue();
+                 container.Remove(ci.key);
+                 this.o_objectqueue.Enqueue(item);
+                 container.Add(k, item);
+             }
+             
+             return true;
+         }
+         public bool Delete(object k, ref ICacheStorage_WuQi container)
+         {
+             container.Remove(k);
+             return true;
+         }
+         public void Clear(ref ICacheStorage_WuQi container)
+         {
+             container.Clear();
+             this.o_objectqueue.Clear();
+         }
     }
 }

@@ -14,8 +14,20 @@ namespace MvcAppTest.Helper.Cache
 {
     public class CCacheDependencyNull_WuQi:ICacheDependency_WuQi
     {
-        public void UpdateCache(ref ICacheStorage_WuQi container)
-        { }
+        public bool Insert(object k, CCacheItem_WuQi item, ref ICacheStorage_WuQi container)
+       {
+           container.Add(k, item);
+           return true;
+       }
+        public bool Delete(object k, ref ICacheStorage_WuQi container)
+       {
+           container.Remove(k);
+           return true;
+       }
+       public void Clear(ref ICacheStorage_WuQi container)
+       {
+           container.Clear();
+       }
 
     }
 }

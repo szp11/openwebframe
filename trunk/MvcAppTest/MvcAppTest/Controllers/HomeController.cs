@@ -16,7 +16,7 @@ namespace MvcAppTest.Controllers
         {
             string providername = System.Configuration.ConfigurationManager.ConnectionStrings["ApplicationServices"].ProviderName;
             string connstring = System.Configuration.ConfigurationManager.ConnectionStrings["ApplicationServices"].ToString();
-            CLog_WuQi.InitLog(new CLogContainer_WuQi(connstring, new CHashCache_WuQi(), new CCacheDependencyNull_WuQi()));
+            CLog_WuQi.InitLog(new CLogContainer_WuQi(connstring, new CHashCache_WuQi(), new CCacheDependencyLength_WuQi(100)));
             CLog_WuQi slw = CLog_WuQi.GetLog();
             if(null != slw)
             {
