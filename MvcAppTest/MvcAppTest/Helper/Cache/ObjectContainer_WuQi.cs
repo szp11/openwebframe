@@ -102,7 +102,9 @@ namespace MvcAppTest.Helper.Cache
                     return false;
                 else
                     rollback = 1;
-                obj_containers.Add(k,new CCacheItem_WuQi(k,t));
+                
+                obj_dependency.Insert(k, new CCacheItem_WuQi(k, t), ref obj_containers);
+                
 
             }
             catch (System.Exception e)
@@ -137,7 +139,7 @@ namespace MvcAppTest.Helper.Cache
                 //在对象集合中寻找
                 if (false != this.obj_containers.Contains(k))
                 {
-                    this.obj_containers.Remove(k);
+                    obj_dependency.Delete(k, ref this.obj_containers);
                     return true;
                 }
 
@@ -178,7 +180,7 @@ namespace MvcAppTest.Helper.Cache
             try
             {
                 obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
-                //在对象集合中寻找
+                //在对象集合中寻找，此处不需要过期策略
                 if (false != this.obj_containers.Contains(k))
                 {
                     backT = this.obj_containers[k];
@@ -226,7 +228,7 @@ namespace MvcAppTest.Helper.Cache
             {
                 obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
                 ClearDB();
-                this.obj_containers.Clear();
+                this.obj_dependency.Clear(ref this.obj_containers);                
 
             }
             catch (System.Exception e)
