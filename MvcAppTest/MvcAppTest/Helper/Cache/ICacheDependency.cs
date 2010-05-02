@@ -10,12 +10,11 @@ namespace MvcAppTest.Helper.Cache
     /// </summary>
     public interface ICacheDependency_WuQi
     {
-        /// <summary>
-        /// 更新容器策略
-        /// </summary>
-        /// <param name="container">缓存区</param>
-       bool Insert(object k, CCacheItem_WuQi item, ref ICacheStorage_WuQi container);
-       bool Delete(object k, ref ICacheStorage_WuQi container);
+        int SynchronousAllObject(List<CCacheItem_WuQi> litem, ref ICacheStorage_WuQi container);
+       bool Insert(object key, CCacheItem_WuQi item, ref ICacheStorage_WuQi container);
+       int Insert(List<CCacheItem_WuQi> listitem,ref ICacheStorage_WuQi container);
+       bool Delete(object key, ref ICacheStorage_WuQi container);
+       int Delete(List<CCacheItem_WuQi> listitem, ref ICacheStorage_WuQi container);
        void Clear(ref ICacheStorage_WuQi container);
     }
 }

@@ -32,6 +32,7 @@ namespace MvcAppTest.Helper.Cache
             this.obj_dependency = icd;
             this.obj_containers = ics;
             this.obj_rwl = new System.Threading.ReaderWriterLock();
+            SynchronousAllObject();
         }
 
         public object[] GetAllObject()
@@ -40,6 +41,7 @@ namespace MvcAppTest.Helper.Cache
         }
         /// <summary>
         /// 同步数据库，即从数据库中得到全部对象
+        /// 注意同步数据库时必须回调一下对象的SetMyGuide（）来得到最后的guid。
         /// </summary>
         /// <returns>所有对象组成的数据字典</returns>
         public virtual Dictionary<object, T> SynchronousDB()
@@ -60,10 +62,12 @@ namespace MvcAppTest.Helper.Cache
                     return 0;
                 //首先清空缓存区
                 obj_containers.Clear();
+                List<CCacheItem_WuQi> litem = new List<CCacheItem_WuQi>();
                 foreach (KeyValuePair<object, T> kvp in objs)
                 {
-                    this.obj_containers.Add(kvp.Key, new CCacheItem_WuQi(kvp.Key, kvp.Value));
+                    litem.Add(new CCacheItem_WuQi(kvp.Key, kvp.Value));                    
                 }
+                obj_dependency.SynchronousAllObject(litem,ref this.obj_containers);
             }
             catch (System.Exception e)
             {
@@ -74,6 +78,46 @@ namespace MvcAppTest.Helper.Cache
                 obj_rwl.ReleaseWriterLock();
             }
             return this.obj_containers.Count;
+        }
+
+        protected virtual bool InsertDB(int condition, List<T> lt)
+        {
+            return true;
+        }
+        public bool Insert(int condition,List<T> lt)
+        {
+            if (0 == lt.Count)
+                return true;
+            //设置回滚标记；用来同步数据库操作和内存操作
+            int rollback = 0;
+            try
+            {
+                obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
+                //如果插入数据库失败，直接返回
+                if (false == InsertDB(condition, lt))
+                    return false;
+                else
+                    rollback = 1;
+
+                List<CCacheItem_WuQi> litem = new List<CCacheItem_WuQi>();
+                foreach (T t in lt)
+                {
+                    litem.Add(new CCacheItem_WuQi(t.GetMyGuid(),t));
+                }
+                obj_dependency.Insert(litem, ref obj_containers);
+
+            }
+            catch (System.Exception e)
+            {
+                if (0 != rollback)
+                    DeleteDB(condition, lt);
+                throw e;
+            }
+            finally
+            {
+                obj_rwl.ReleaseWriterLock();
+            }
+            return true;
         }
         /// <summary>
         /// 插入对象到数据库中，由子类实现
@@ -119,6 +163,48 @@ namespace MvcAppTest.Helper.Cache
             }
             return true;
         }
+
+        protected virtual bool DeleteDB(int condition,List<T> lt) 
+        {
+            return true;
+        }
+        public bool Delete(int condition,List<T> lt)
+        {
+            if (0 == lt.Count)
+                return true;
+            int rollback = 0;//设置回滚标记；用来同步数据库操作和内存操作
+            try
+            {
+                obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
+                //首先从数据库中删除，如果成功将回滚置1
+                if (false == DeleteDB(condition, lt))
+                    return false;
+                else
+                    rollback = 1;
+                //在对象集合中寻找
+                List<CCacheItem_WuQi> litem = new List<CCacheItem_WuQi>();
+                foreach (T t in lt)
+                {
+                    litem.Add(new CCacheItem_WuQi(t.GetMyGuid(), t));
+                }
+
+                obj_dependency.Delete(litem, ref this.obj_containers);
+
+            }
+            catch (System.Exception e)
+            {
+                //如果回滚标志置1
+                if (0 != rollback)
+                    InsertDB(condition, lt);
+                throw e;
+            }
+            finally
+            {
+                obj_rwl.ReleaseWriterLock();
+            }
+            return true;
+        }
+
         /// <summary>
         /// 删除一个对象
         /// </summary>
@@ -167,6 +253,51 @@ namespace MvcAppTest.Helper.Cache
         {
             return true;
         }
+
+        protected virtual bool UpdateDB(int condition,List<T> lt) 
+        {
+            return true;
+        }
+        public bool Update(int condition, List<T> lt)
+        {
+            if (0 == lt.Count)
+                return true;
+            List<CCacheItem_WuQi> backT = new List<CCacheItem_WuQi>();
+            try
+            {
+                obj_rwl.AcquireWriterLock(System.Threading.Timeout.Infinite);
+                //在对象集合中寻找，此处不需要过期策略
+                foreach(T t in lt)
+                {
+                    if(false != this.obj_containers.Contains(t.GetMyGuid()))
+                    {
+                        backT.Add((CCacheItem_WuQi)this.obj_containers[t.GetMyGuid()]);
+                        this.obj_containers[t.GetMyGuid()] = new CCacheItem_WuQi(t.GetMyGuid(), t);
+                    }
+                    
+                }
+                //从数据库中更新，如果成功将回滚置1
+                //该操作将同时更新该对象的所有数据项，而没有排除不需要更新的数据项；
+                //所以该操作要求数据库表存储在一个数据服务器上。
+                //不适用于分布式服务器，因为分布式服务器常采用分表策略，该操作将大大降低效率。
+                if (false == UpdateDB(condition, lt))
+                {
+                    foreach( CCacheItem_WuQi item in backT)
+                    {
+                        this.obj_containers[item.key] = item;
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                obj_rwl.ReleaseWriterLock();
+            }
+            return true;
+        }
         /// <summary>
         /// 更新一个对象
         /// </summary>
@@ -188,11 +319,13 @@ namespace MvcAppTest.Helper.Cache
                     rollback = 1;
                 }
                 //从数据库中更新，如果成功将回滚置1
+                //该操作将同时更新该对象的所有数据项，而没有排除不需要更新的数据项；
+                //所以该操作要求数据库表存储在一个数据服务器上。
+                //不适用于分布式服务器，因为分布式服务器常采用分表策略，该操作将大大降低效率。
                 if (false == UpdateDB(k, t))
                 {
                     this.obj_containers[k] = backT;
                 }
-
             }
             catch (System.Exception e)
             {
@@ -206,7 +339,6 @@ namespace MvcAppTest.Helper.Cache
                 obj_rwl.ReleaseWriterLock();
             }
             return true;
-
         }
         /// <summary>
         /// 从数据库更新一个对象，由子类实现

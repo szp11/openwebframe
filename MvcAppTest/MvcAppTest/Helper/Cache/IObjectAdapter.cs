@@ -18,6 +18,7 @@ namespace MvcAppTest.Helper.Cache
         /// <param name="adapter">0：默认，能从容器中得到所有的对象。其他数值自定义</param>
         /// <param name="al">需要的外部参数集</param>
         /// <returns>符合查找条件返回true</returns>
-        bool IsMe(int adapter, ArrayList al);
+        bool IsMe(int adapter, ArrayList args);
+        object GetMyGuid();
     }
 }

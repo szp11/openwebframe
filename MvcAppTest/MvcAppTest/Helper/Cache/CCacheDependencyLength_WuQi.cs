@@ -31,6 +31,26 @@ namespace MvcAppTest.Helper.Cache
             get { return this.i_objectcountmax; }
             set { this.i_objectcountmax = value; }
         }
+        public int SynchronousAllObject(List<CCacheItem_WuQi> litem, ref ICacheStorage_WuQi container)
+        {
+            container.Clear();
+            foreach (CCacheItem_WuQi item in litem)
+            {
+                if (this.o_objectqueue.Count < this.i_objectcountmax)
+                {
+                    container.Add(item.key, item);
+                    this.o_objectqueue.Enqueue(item);
+                }
+                else
+                {
+                    CCacheItem_WuQi ci = this.o_objectqueue.Dequeue();
+                    container.Remove(ci.key);
+                    this.o_objectqueue.Enqueue(item);
+                    container.Add(item.key, item);
+                }
+            }
+            return container.Count;
+        }
          public bool Insert(object k, CCacheItem_WuQi item, ref ICacheStorage_WuQi container)
          {
              if(this.o_objectqueue.Count < this.i_objectcountmax)
@@ -49,11 +69,44 @@ namespace MvcAppTest.Helper.Cache
              
              return true;
          }
+         public int Insert(List<CCacheItem_WuQi> listitem, ref ICacheStorage_WuQi container)
+         {
+             int result = 0;
+             foreach (CCacheItem_WuQi item in listitem)
+             {
+                 if (this.o_objectqueue.Count < this.i_objectcountmax)
+                 {
+                     container.Add(item.key, item);
+                     this.o_objectqueue.Enqueue(item);
+                     result++;
+                 }
+                 else
+                 {
+                     CCacheItem_WuQi ci = this.o_objectqueue.Dequeue();
+                     container.Remove(ci.key);
+                     this.o_objectqueue.Enqueue(item);
+                     container.Add(item.key, item);
+                     result++;
+                 }
+             }
+             return result;
+         } 
          public bool Delete(object k, ref ICacheStorage_WuQi container)
          {
              container.Remove(k);
              return true;
          }
+
+         public int Delete(List<CCacheItem_WuQi> listitem, ref ICacheStorage_WuQi container)
+         {
+             
+             foreach (CCacheItem_WuQi item in listitem)
+             {
+                 container.Remove(item.key);
+
+             }
+             return listitem.Count;
+         } 
          public void Clear(ref ICacheStorage_WuQi container)
          {
              container.Clear();
