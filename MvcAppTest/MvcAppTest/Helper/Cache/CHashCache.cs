@@ -6,31 +6,29 @@
  * */
 using System;
 using System.Data;
+using System.Collections;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using System.Web;
 using System.Web.Security;
-using System.Web.UI;
-using System.Web.UI.HtmlControls;
-using System.Web.UI.WebControls;
-using System.Web.UI.WebControls.WebParts;
 using System.Xml.Linq;
 
 namespace MvcAppTest.Helper.Cache
 {
-    public class CHashCache_WuQi : ICacheStorage_WuQi
+    public class CHashCache_WuQi<K,T> : ICacheStorage_WuQi<K,T>
     {
-        private System.Collections.Hashtable obj_cache= null;
+        private System.Collections.Generic.Dictionary<K, CCacheItem_WuQi<K, T>> obj_cache = null;
         public CHashCache_WuQi()
         {
             if (null == obj_cache)
-                obj_cache = new System.Collections.Hashtable();
+                obj_cache = new System.Collections.Generic.Dictionary<K, CCacheItem_WuQi<K, T>>();
         }
         /// <summary>
         /// 获取设置一个存储项
         /// </summary>
         /// <param name="key">存储项的健值</param>
-        public object this[object key] { get { return this.obj_cache[key]; } set { this.obj_cache[key] = value; } }
+        public CCacheItem_WuQi<K, T> this[K key] { get { return this.obj_cache[key]; } set { this.obj_cache[key] = value; } }
 
 
         /// <summary>
@@ -46,7 +44,7 @@ namespace MvcAppTest.Helper.Cache
         /// <remarks>
         /// 如果存在相同的健值，则更新存储的对象
         /// </remarks>
-        public void Add(object key, object obj)
+        public void Add(K key, CCacheItem_WuQi<K, T> obj)
         {
             this.obj_cache.Add(key, obj);
         }
@@ -56,7 +54,7 @@ namespace MvcAppTest.Helper.Cache
         /// </summary>
         /// <param name="key">存储项的健值</param>
         /// <returns>存储的对象，如果存储中没有命中，则返回<c>null</c></returns>
-        public object Get(object key)
+        public CCacheItem_WuQi<K, T> Get(K key)
         {
             return this.obj_cache[key];
         }
@@ -70,7 +68,7 @@ namespace MvcAppTest.Helper.Cache
         /// <remarks>
         /// 仅针对存在存储项，若不存在，则不进行任何操作
         /// </remarks>
-        public void Set(object key, object obj)
+        public void Set(K key, CCacheItem_WuQi<K, T> obj)
         {
             this.obj_cache[key] = obj;
         }
@@ -80,7 +78,7 @@ namespace MvcAppTest.Helper.Cache
         /// 移除存储项
         /// </summary>
         /// <param name="key">存储项的健值</param>
-        public void Remove(object key)
+        public void Remove(K key)
         {
            this.obj_cache.Remove(key);
         }
@@ -91,9 +89,9 @@ namespace MvcAppTest.Helper.Cache
         /// </summary>
         /// <param name="key">存储项的健值</param>
         /// <returns>是/否</returns>
-        public bool Contains(object key)
+        public bool Contains(K key)
         {
-            return this.obj_cache.Contains(key);
+            return this.obj_cache.ContainsKey(key);
         }
 
         /// <summary>
@@ -108,14 +106,13 @@ namespace MvcAppTest.Helper.Cache
         /// 获得此存储器中所有项的健值
         /// </summary>
         /// <returns>健值列表（数组）</returns>
-        public object[] GetAllKeys()
+        public K[] GetAllKeys()
         {
-            object[] tmp = new object[this.obj_cache.Count];
-            int i =0;
-            foreach(System.Collections.DictionaryEntry d in obj_cache)
-            {
-                tmp[i] = d.Key; 
-            }
+            K[] tmp = new K[this.obj_cache.Count];
+
+            System.Collections.Generic.Dictionary<K, CCacheItem_WuQi<K, T>>.KeyCollection keysc = this.obj_cache.Keys;
+
+            keysc.CopyTo(tmp, 0);
             return tmp;
         }
 
@@ -123,19 +120,17 @@ namespace MvcAppTest.Helper.Cache
         /// 获取此存储器中所有项的值
         /// </summary>
         /// <returns>存储项列表（数组）</returns>
-        public  object[] GetAllValues()
+        public CCacheItem_WuQi<K, T>[] GetAllValues()
         {
-            object[] tmp = new object[this.obj_cache.Count];
-            int i = 0;
-            foreach (System.Collections.DictionaryEntry d in obj_cache)
-            {
-                tmp[i] = d.Value;
-            }
+            CCacheItem_WuQi<K, T>[] tmp = new CCacheItem_WuQi<K, T>[this.obj_cache.Count];
+
+            System.Collections.Generic.Dictionary<K, CCacheItem_WuQi<K, T>>.ValueCollection vc = this.obj_cache.Values;
+
+            vc.CopyTo(tmp, 0);
             return tmp;
         }
 
-
-        public System.Collections.IEnumerator GetEnumerator()
+        public Dictionary<K, CCacheItem_WuQi<K,T>>.Enumerator GetEnumerator()
         {
             return this.obj_cache.GetEnumerator();
         }
