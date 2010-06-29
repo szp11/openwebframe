@@ -5,6 +5,9 @@ using System.Web;
 using System.Web.Mvc;
 using System.Web.Routing;
 
+using MvcAppTest.Helper.Cache;
+using MvcAppTest.Models.Log;
+
 namespace MvcAppTest
 {
     // Note: For instructions on enabling IIS6 or IIS7 classic mode, 
@@ -27,6 +30,18 @@ namespace MvcAppTest
         protected void Application_Start()
         {
             RegisterRoutes(RouteTable.Routes);
+            //启动顺序
+            //log信息管理初始化
+            string connstring = System.Configuration.ConfigurationManager.ConnectionStrings["ApplicationServices"].ToString();
+            CLogMarkContainer_WuQi markcontainers = new CLogMarkContainer_WuQi(connstring, new CHashCache_WuQi<uint, CLogMark_WuQi>(),new CCacheDependencyNull_WuQi<uint, CLogMark_WuQi>());
+            CLogMsgContainer_WuQi msgcontainers = new CLogMsgContainer_WuQi(connstring, new CHashCache_WuQi<uint, CLogMsg_WuQi>(), new CCacheDependencyTime_WuQi<uint, CLogMsg_WuQi>());
+            markcontainers.logmsgcontainer = msgcontainers;
+            msgcontainers.RegisterTimeDependency(1);
+            CLog_WuQi log = CLog_WuQi.GetLog();
+            log.InitLog(msgcontainers,markcontainers);
+            CLog_WuQi.logstate_now = LOGSTATE.LogDebug;
         }
+
+
     }
 }
