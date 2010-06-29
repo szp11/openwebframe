@@ -15,15 +15,17 @@ using MvcAppTest.Helper.Cache;
 
 namespace MvcAppTest.Models.Log
 {
+
     /// <summary>
     /// 抽象类；外部创建的需存储的信息
     /// </summary>
-    public abstract class CLogMsg_WuQi : IObjectAdapter_WuQi
+    public abstract class CLogMsg_WuQi : IObjectAdapter_WuQi<uint>
     {
         //与SetMyGuid配合生成uint型唯一标识符
         //之所以使用uint数据类型的唯一标识符是为了优化数据库查询速度
         protected static bool b_initguid = false;
         protected static uint ui_guid = 0;
+        private static object obj_lock = new object();
 
         public uint ui_id;//唯一标识符
         public string str_mark;//发出该信息的标记
@@ -31,14 +33,29 @@ namespace MvcAppTest.Models.Log
         public string str_logtype;//信息类型
         public string str_logowner;//信息所有者
         public DateTime d_logtime;//信息创建的时间
+
+        public CLogMsgInfo msginfo = null;
         public CLogMsg_WuQi(string smsg, string sowner, string stype, string smark)
         {
-            this.ui_id = CLogMsg_WuQi.ui_guid++;
+            lock(CLogMsg_WuQi.obj_lock)
+            {
+                CLogMsg_WuQi.ui_guid++;
+            }
+            
+            this.ui_id = CLogMsg_WuQi.ui_guid;
             this.str_mark = smark;
             this.str_logmsg = smsg;
             this.str_logtype = stype;
             this.str_logowner = sowner;
             this.d_logtime = DateTime.Now;
+            if (null == msginfo)
+                msginfo = new CLogMsgInfo();
+            msginfo.ui_id = this.ui_id;
+            msginfo.str_mark = this.str_mark;
+            msginfo.str_logmsg = this.str_logmsg;
+            msginfo.str_logtype = this.str_logtype;
+            msginfo.str_logowner = this.str_logowner;
+            msginfo.d_logtime = this.d_logtime;
         }
         public CLogMsg_WuQi(uint sid, string smark, string stype, string smsg, string sowner, DateTime logtime)
         {
@@ -48,6 +65,15 @@ namespace MvcAppTest.Models.Log
             this.str_logtype = stype;
             this.str_logowner = sowner;
             this.d_logtime = logtime;
+
+            if (null == msginfo)
+                msginfo = new CLogMsgInfo();
+            msginfo.ui_id = this.ui_id;
+            msginfo.str_mark = this.str_mark;
+            msginfo.str_logmsg = this.str_logmsg;
+            msginfo.str_logtype = this.str_logtype;
+            msginfo.str_logowner = this.str_logowner;
+            msginfo.d_logtime = this.d_logtime;
         }
         public string GetOwner()
         {
@@ -66,18 +92,22 @@ namespace MvcAppTest.Models.Log
         {
             return this.d_logtime;
         }
-        public object GetMyGuid()
+        public uint GetMyGuid()
         {
             return this.ui_id;
         }
-        static public void SetMyGuid(object objvalue)
+        static public void SetMyGuid(uint objvalue)
         {
-            if (false != CLogMsg_WuQi.b_initguid)
-                return;
-            CLogMsg_WuQi.ui_guid = (uint)objvalue;
-            CLogMsg_WuQi.b_initguid = true;
+            lock(CLogMsg_WuQi.obj_lock)
+            {
+                if (false != CLogMsg_WuQi.b_initguid)
+                    return;
+                CLogMsg_WuQi.ui_guid = objvalue;
+                CLogMsg_WuQi.b_initguid = true;
+
+            }
         }
-        public virtual bool IsMe(int adapter, ArrayList al)
+        public virtual bool IsMe(int adapter, Hashtable al)
         {
             bool bresult = false;
             switch (adapter)
@@ -87,8 +117,8 @@ namespace MvcAppTest.Models.Log
                     break;
                 case 1://信息所有者
                     if (0 != al.Count)
-                    {
-                        foreach (string owner in al)
+                    {                        
+                        foreach (string owner in al.Values)
                         {
                             if (0 == this.str_logowner.CompareTo(owner))
                             {
@@ -98,7 +128,18 @@ namespace MvcAppTest.Models.Log
                         }
                     }
                     break;
-
+                case 2:
+                    if(0 != al.Count)
+                    {
+                        foreach ( uint item in al.Values)
+                        {
+                            if(this.ui_id == item)
+                            {
+                                bresult = true; break;
+                            }
+                        }
+                    }
+                    break;
                 default:
                     break;
             }
@@ -113,6 +154,10 @@ namespace MvcAppTest.Models.Log
             return String.Format("[{0}]{1}:{2}", this.str_logtype, this.d_logtime.ToString(), this.str_logmsg);
         }
 
+        public CLogMsgInfo GetMsgModel()
+        {
+            return this.msginfo;
+        }
     }
     /// <summary>
     /// DEBUG 信息类

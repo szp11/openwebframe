@@ -24,7 +24,7 @@ namespace MvcAppTest.Models.Log
         /// <param name="adapter">删除条件</param>
         /// <param name="al">所需参数集</param>
         /// <returns>删除的个数</returns>
-        int DeleteMsg(int adapter, ArrayList al);
+        int DeleteMsg(int adapter, List<uint> al);
         /// <summary>
         /// 同步数据库和缓存中的数据，LOG模块加载时使用
         /// </summary>
@@ -34,7 +34,7 @@ namespace MvcAppTest.Models.Log
         /// 获得所有的数据
         /// </summary>
         /// <returns>信息所有者</returns>
-        ArrayList ReadAllRecord(int adapter, string msgowner);
+        List<CLogMsg_WuQi> ReadAllRecord(int adapter, string msgowner);
         /// <summary>
         /// 批量写入数据
         /// </summary>
