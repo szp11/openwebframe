@@ -5,8 +5,8 @@
 </asp:Content>
 
 <asp:Content ID="errorContent" ContentPlaceHolderID="MainContent" runat="server">
-    <h2>
-        Sorry, an error occurred while processing your request.
+    <h2 style="color:Red">
+        <%=ViewData["msg"] %>
     </h2>
     <p>
         <input id="Button1" type="button" value="返回上一级" onclick="javascript:history.go(-1);" /></p>
