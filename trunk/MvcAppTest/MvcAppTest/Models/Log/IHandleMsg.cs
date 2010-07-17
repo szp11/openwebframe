@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using MvcAppTest.Helper.Cache;
+using MvcAppTest.Helper.corelevel.Cache;
 
 namespace MvcAppTest.Models.Log
 {

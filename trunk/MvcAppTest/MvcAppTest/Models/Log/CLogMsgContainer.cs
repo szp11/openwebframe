@@ -12,7 +12,7 @@ using System.Xml.Linq;
 using System.Collections;
 using System.Collections.Generic;
 
-using MvcAppTest.Helper.Cache;
+using MvcAppTest.Helper.corelevel.Cache;
 
 namespace MvcAppTest.Models.Log
 {

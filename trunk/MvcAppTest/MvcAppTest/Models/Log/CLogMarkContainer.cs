@@ -11,7 +11,8 @@ using System.Web.UI.WebControls.WebParts;
 using System.Xml.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using MvcAppTest.Helper.Cache;
+using MvcAppTest.Helper.corelevel.Cache;
+using MvcAppTest.Helper.corelevel.Exception;
 namespace MvcAppTest.Models.Log
 {
     public class CLogMarkContainer_WuQi : ObjectContainer_WuQi<uint,CLogMark_WuQi>, IHandleMark_WuQi
@@ -137,6 +138,7 @@ namespace MvcAppTest.Models.Log
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -166,6 +168,7 @@ namespace MvcAppTest.Models.Log
                 }
                 catch (System.Exception e)
                 {
+                    CExceptionContainer_WuQi.ProcessException(e);
                     throw e;
                 }
                 finally
@@ -196,6 +199,7 @@ namespace MvcAppTest.Models.Log
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -232,6 +236,7 @@ namespace MvcAppTest.Models.Log
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -270,6 +275,7 @@ namespace MvcAppTest.Models.Log
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -312,6 +318,7 @@ namespace MvcAppTest.Models.Log
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
