@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MvcAppTest.Helper.Cache
+namespace MvcAppTest.Helper.corelevel.Cache
 {
     /// <summary>
     /// 缓存过期策略

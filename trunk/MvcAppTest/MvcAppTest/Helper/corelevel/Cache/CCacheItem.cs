@@ -10,7 +10,7 @@ using System.Web.UI.WebControls;
 using System.Web.UI.WebControls.WebParts;
 using System.Xml.Linq;
 
-namespace MvcAppTest.Helper.Cache
+namespace MvcAppTest.Helper.corelevel.Cache
 {
     /// <summary>
     /// 缓存的对象单元;目的为配合过期策略

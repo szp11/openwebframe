@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MvcAppTest.Helper.Cache
+namespace MvcAppTest.Helper.corelevel.Cache
 {
     /// <summary>
     /// 放入容器的对象必须实现的接口，把条件查找等逻辑从容器中剥离出来
