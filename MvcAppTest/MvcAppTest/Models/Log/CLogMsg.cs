@@ -11,7 +11,7 @@ using System.Web.UI.WebControls.WebParts;
 using System.Xml.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using MvcAppTest.Helper.Cache;
+using MvcAppTest.Helper.corelevel.Cache;
 
 namespace MvcAppTest.Models.Log
 {
@@ -40,9 +40,9 @@ namespace MvcAppTest.Models.Log
             lock(CLogMsg_WuQi.obj_lock)
             {
                 CLogMsg_WuQi.ui_guid++;
+                this.ui_id = CLogMsg_WuQi.ui_guid;
             }
             
-            this.ui_id = CLogMsg_WuQi.ui_guid;
             this.str_mark = smark;
             this.str_logmsg = smsg;
             this.str_logtype = stype;
