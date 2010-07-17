@@ -5,7 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace MvcAppTest.Helper.TaskTimer
+namespace MvcAppTest.Helper.corelevel.TaskTimer
 {
     /// <summary>
     /// 公共任务定时器，定时触发已经注册的任务

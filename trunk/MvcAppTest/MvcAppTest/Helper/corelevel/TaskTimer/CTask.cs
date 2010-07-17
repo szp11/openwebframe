@@ -10,7 +10,7 @@ using System.Web.UI.WebControls;
 using System.Web.UI.WebControls.WebParts;
 using System.Xml.Linq;
 
-namespace MvcAppTest.Helper.TaskTimer
+namespace MvcAppTest.Helper.corelevel.TaskTimer
 {
     public  class CTask_WuQi
     {
