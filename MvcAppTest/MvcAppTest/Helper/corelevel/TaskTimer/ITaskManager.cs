@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace MvcAppTest.Helper.TaskTimer
+namespace MvcAppTest.Helper.corelevel.TaskTimer
 {
     interface ITaskManager_WuQi
     {
