@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using MvcAppTest.Helper;
-using MvcAppTest.Helper.Cache;
+using MvcAppTest.Helper.corelevel.Cache;
 
 
 namespace MvcAppTest.Controllers

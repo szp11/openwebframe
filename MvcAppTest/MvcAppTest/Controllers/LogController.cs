@@ -6,6 +6,7 @@ using System.Web.Mvc;
 using System.Web.Mvc.Ajax;
 using MvcAppTest.Models.Log;
 using MvcAppTest.Helper.HtmlHelpers.pagerhelper;
+using MvcAppTest.Helper.corelevel.Exception;
 
 namespace MvcAppTest.Controllers
 {
@@ -16,6 +17,15 @@ namespace MvcAppTest.Controllers
 
         public ActionResult  Index()
         {
+            try
+            {
+               //throw new System.NullReferenceException();
+            }
+            catch (System.Exception e)
+            {
+                ViewData["msg"] =CExceptionContainer_WuQi.ProcessException(e);
+                return View("Error");
+            }
             return View();
         }
 
@@ -62,39 +72,49 @@ namespace MvcAppTest.Controllers
         [AcceptVerbs(HttpVerbs.Post)]
         public ActionResult ManagerMark(FormCollection collection)
         {
-            string sswitch = Request.Form["switch"];
-
-            IList<CLogMarkInfo> result = TempData["infos"] as IList<CLogMarkInfo>;
-            TempData["infos"] = result;
-
-            string[] stringsplit = collection.GetValue("Guid").AttemptedValue.Split(',');
-            List<uint> ls = new List<uint>();
-            foreach (var item in stringsplit)
+            try
             {
-                if( 0 ==item.CompareTo("false") || 0 == item.CompareTo("true"))
-                {
+                string sswitch = Request.Form["switch"];
 
-                }
-                else
+                IList<CLogMarkInfo> result = TempData["infos"] as IList<CLogMarkInfo>;
+                TempData["infos"] = result;
+
+                string[] stringsplit = collection.GetValue("Guid").AttemptedValue.Split(',');
+                List<uint> ls = new List<uint>();
+                foreach (var item in stringsplit)
                 {
-                    ls.Add(uint.Parse(item));
+                    if (0 == item.CompareTo("false") || 0 == item.CompareTo("true"))
+                    {
+
+                    }
+                    else
+                    {
+                        ls.Add(uint.Parse(item));
+                    }
                 }
-            }
-            if(ls.Count == 0)
-            {
+                if (ls.Count == 0)
+                {
+                    return RedirectToAction("ListInfos");
+                }
+
+                if (null != sswitch)
+                {
+                    CLog_WuQi log = CLog_WuQi.GetLog();
+                    foreach (var item in ls)
+                    {
+                        log.ChangeMarkState((int)item);
+                    }
+                }
+
                 return RedirectToAction("ListInfos");
-            }
 
-            if(null != sswitch)
+            }
+            catch (System.Exception e)
             {
-                CLog_WuQi log = CLog_WuQi.GetLog();
-                foreach (var item in ls)
-                {
-                    log.ChangeMarkState((int)item);
-                }
-            }
+                ViewData["msg"] = CExceptionContainer_WuQi.ProcessException(e);
+                return View("Error");
 
-            return RedirectToAction("ListInfos");
+            }
         }
 
         [AcceptVerbs(HttpVerbs.Post)]
@@ -135,52 +155,61 @@ namespace MvcAppTest.Controllers
         [AcceptVerbs(HttpVerbs.Post)]
         public ActionResult ManagerMsg(FormCollection collection)
         {
-            string sdelete = Request.Form["delete"];
-
-            IList<CLogMsgInfo> result = TempData["msginfos"] as IList<CLogMsgInfo>;
-            List<CLogMsgInfo> deletinfos = new List<CLogMsgInfo>();
-
-            string[] stringsplit = collection.GetValue("Guid").AttemptedValue.Split(',');
-            List<uint> ls = new List<uint>();
-            foreach (var item in stringsplit)
+            try
             {
-                if (0 == item.CompareTo("false") || 0 == item.CompareTo("true"))
-                {
+                string sdelete = Request.Form["delete"];
 
-                }
-                else
+                IList<CLogMsgInfo> result = TempData["msginfos"] as IList<CLogMsgInfo>;
+                List<CLogMsgInfo> deletinfos = new List<CLogMsgInfo>();
+
+                string[] stringsplit = collection.GetValue("Guid").AttemptedValue.Split(',');
+                List<uint> ls = new List<uint>();
+                foreach (var item in stringsplit)
                 {
-                    ls.Add(uint.Parse(item));
-                    foreach (CLogMsgInfo info in result)
+                    if (0 == item.CompareTo("false") || 0 == item.CompareTo("true"))
                     {
-                        if( info.ui_id == uint.Parse(item))
-                            deletinfos.Add(info);
+
+                    }
+                    else
+                    {
+                        ls.Add(uint.Parse(item));
+                        foreach (CLogMsgInfo info in result)
+                        {
+                            if (info.ui_id == uint.Parse(item))
+                                deletinfos.Add(info);
+                        }
                     }
                 }
-            }
-            if (ls.Count == 0)
-            {
-                TempData["msginfos"] = result;
-                return RedirectToAction("ListMsgInfos");
-            }
-
-
-            if (null != sdelete)
-            {
-                CLog_WuQi log = CLog_WuQi.GetLog();
-                int count =log.DeleteMsgs(ls);
-                if(count >0)
+                if (ls.Count == 0)
                 {
-                    foreach (CLogMsgInfo item in deletinfos)
-                    {
-                        result.Remove(item);
-                    }
-
+                    TempData["msginfos"] = result;
+                    return RedirectToAction("ListMsgInfos");
                 }
-                TempData["msginfos"] = result;
+
+
+                if (null != sdelete)
+                {
+                    CLog_WuQi log = CLog_WuQi.GetLog();
+                    int count = log.DeleteMsgs(ls);
+                    if (count > 0)
+                    {
+                        foreach (CLogMsgInfo item in deletinfos)
+                        {
+                            result.Remove(item);
+                        }
+
+                    }
+                    TempData["msginfos"] = result;
+                    return RedirectToAction("ListMsgInfos");
+                }
                 return RedirectToAction("ListMsgInfos");
+
             }
-            return RedirectToAction("ListMsgInfos");
+            catch (System.Exception e)
+            {
+                ViewData["msg"] = CExceptionContainer_WuQi.ProcessException(e);
+                return View("Error");
+            }
         }
 
     }
