@@ -56,6 +56,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controllers\AccountController.cs" />
+    <Compile Include="Controllers\ExceptionController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\LogController.cs" />
     <Compile Include="Default.aspx.cs">
@@ -65,6 +66,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helper\corelevel\Cache\CCacheDependencyFull_WuQi.cs" />
     <Compile Include="Helper\corelevel\Cache\CCacheDependencyTime_WuQi.cs" />
     <Compile Include="Helper\corelevel\Cache\CCacheDependencyNull_WuQi.cs" />
     <Compile Include="Helper\corelevel\Cache\CCacheItem.cs" />
@@ -73,6 +75,10 @@
     <Compile Include="Helper\corelevel\Cache\IObjectAdapter.cs" />
     <Compile Include="Helper\corelevel\Cache\ICacheStorage.cs" />
     <Compile Include="Helper\corelevel\Cache\ObjectContainer_WuQi.cs" />
+    <Compile Include="Helper\corelevel\Exception\CApplicationExceptionBase.cs" />
+    <Compile Include="Helper\corelevel\Exception\CExceptionContainer.cs" />
+    <Compile Include="Helper\corelevel\Exception\CExceptionDecoraterBase.cs" />
+    <Compile Include="Helper\corelevel\Exception\CUserException.cs" />
     <Compile Include="Helper\HtmlHelpers\CalendarExtensions.cs" />
     <Compile Include="Helper\HtmlHelpers\pagerhelper\CPagerHelper.cs" />
     <Compile Include="Helper\HtmlHelpers\pagerhelper\CPagerInfo.cs" />
@@ -80,6 +86,7 @@
     <Compile Include="Helper\corelevel\TaskTimer\CTask.cs" />
     <Compile Include="Helper\corelevel\TaskTimer\CTaskManager.cs" />
     <Compile Include="Helper\corelevel\TaskTimer\ITaskManager.cs" />
+    <Compile Include="Models\Exception\CExceptionInfo.cs" />
     <Compile Include="Models\Log\CLog.cs" />
     <Compile Include="Models\Log\CLogMark.cs" />
     <Compile Include="Models\Log\CLogMarkContainer.cs" />
@@ -95,6 +102,8 @@
     <Content Include="Default.aspx" />
     <Content Include="Global.asax" />
     <Content Include="Scripts\CheckBoxAll.js" />
+    <Content Include="Views\Exception\Exceptioninfos.aspx" />
+    <Content Include="Views\Exception\Index.aspx" />
     <Content Include="Views\Log\Index.aspx" />
     <Content Include="Views\Log\ListInfos.aspx" />
     <Content Include="Views\Log\ListMsgInfos.aspx" />
