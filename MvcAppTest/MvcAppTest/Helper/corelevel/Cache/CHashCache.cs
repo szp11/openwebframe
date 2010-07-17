@@ -14,7 +14,7 @@ using System.Web;
 using System.Web.Security;
 using System.Xml.Linq;
 
-namespace MvcAppTest.Helper.Cache
+namespace MvcAppTest.Helper.corelevel.Cache
 {
     public class CHashCache_WuQi<K,T> : ICacheStorage_WuQi<K,T>
     {

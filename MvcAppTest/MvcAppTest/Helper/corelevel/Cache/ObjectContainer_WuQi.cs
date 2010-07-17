@@ -3,9 +3,9 @@ using System.Data;
 using System.Configuration;
 using System.Collections;
 using System.Collections.Generic;
-using MvcAppTest.Helper.TaskTimer;
-
-namespace MvcAppTest.Helper.Cache
+using MvcAppTest.Helper.corelevel.TaskTimer;
+using MvcAppTest.Helper.corelevel.Exception;
+namespace MvcAppTest.Helper.corelevel.Cache
 {
     /// <summary>
     /// 对象容器，用于缓存外部对象
@@ -61,6 +61,7 @@ namespace MvcAppTest.Helper.Cache
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -100,6 +101,7 @@ namespace MvcAppTest.Helper.Cache
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -140,6 +142,7 @@ namespace MvcAppTest.Helper.Cache
             {
                 if (0 != rollback)
                     DeleteDB(condition, lt);
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -182,6 +185,7 @@ namespace MvcAppTest.Helper.Cache
             {
                 if(0 != rollback)
                     DeleteDB(k,t);
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -227,6 +231,7 @@ namespace MvcAppTest.Helper.Cache
                     InsertDB(condition, lt);
                     count = 0;
                 }
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -266,6 +271,7 @@ namespace MvcAppTest.Helper.Cache
                 //如果回滚标志置1
                 if (0 != rollback)
                     InsertDB(k, t);
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -321,6 +327,7 @@ namespace MvcAppTest.Helper.Cache
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -363,6 +370,7 @@ namespace MvcAppTest.Helper.Cache
                 //如果回滚标志置1
                 if (0 != rollback)
                     this.obj_containers[k] = backT;
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -444,6 +452,7 @@ namespace MvcAppTest.Helper.Cache
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;
             }
             finally
@@ -491,6 +500,7 @@ namespace MvcAppTest.Helper.Cache
             }
             catch (System.Exception e)
             {
+                CExceptionContainer_WuQi.ProcessException(e);
                 throw e;            	
             }
             finally
